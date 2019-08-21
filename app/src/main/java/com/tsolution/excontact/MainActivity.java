@@ -11,16 +11,14 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
-import android.util.LogPrinter;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.LogManager;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<contacts> contacts = new ArrayList<>();
+    ArrayList<MyContacts> contacts = new ArrayList<>();
     ArrayList<String> groupTitles = new ArrayList<>();
     HashMap<String, String> groups = new HashMap<>();
 
@@ -48,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         );
         while (groupCursor.moveToNext()) {
             try {
-                contacts.add(new contacts(groupCursor.getString(0), groupCursor.getString(1), groupCursor.getString(2)));
+                contacts.add(new MyContacts(groupCursor.getString(0), groupCursor.getString(1), groupCursor.getString(2)));
             } catch (Exception e) {
                 return;
             }
@@ -85,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setGroupId() {
-        for (contacts tmp : contacts) {
-            tmp.groupId = Integer.parseInt(groups.get(tmp.name));
+        for (MyContacts tmp : contacts) {
+            tmp.setGroupId(Integer.parseInt(groups.get(tmp.getName())));
         }
     }
 
@@ -110,19 +108,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void matching() {
-        for (contacts tmp : contacts) {
-            if (tmp.groupId != 0) {
-                tmp.groupTitle = groupTitles.get(tmp.groupId - 1) + "";
+        for (MyContacts tmp : contacts) {
+            if (tmp.getGroupId() != 0) {
+                tmp.setGroupTitle(groupTitles.get(tmp.getGroupId() - 1) + "");
             } else {
-                tmp.groupTitle = "기본그룹";
+                tmp.setGroupTitle("기본그룹");
             }
         }
         Log();
     }
 
     public void Log() {
-        for (contacts tmp : contacts) {
-            Log.v("contacts", String.format("Name: %s, Phone: %s, GroupID: %s, GroupTitle: %s, star: %s", tmp.name, tmp.phone, tmp.groupId, tmp.groupTitle, tmp.starred));
+        for (MyContacts tmp : contacts) {
+            Log.v("MyContacts", String.format("Name: %s, Phone: %s, GroupID: %s, GroupTitle: %s, star: %s", tmp.getName(), tmp.getPhone(), tmp.getGroupId(), tmp.getGroupTitle(), tmp.getStarred()));
         }
     }
 
@@ -132,8 +130,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         getContactsList();
         StringBuffer sb = new StringBuffer();
-        for (contacts tmp : contacts) {
-            sb.append("Name: " + tmp.name + ", Phone: " + tmp.phone + ", GroupID: " + tmp.groupId + ", GroupTitle: " + tmp.groupTitle + ", star: " + tmp.starred + "\n\n");
+        for (MyContacts tmp : contacts) {
+            sb.append("Name: " + tmp.getName() + ", Phone: " + tmp.getPhone() + ", GroupID: " + tmp.getGroupId() + ", GroupTitle: " + tmp.getGroupTitle() + ", star: " + tmp.getStarred() + "\n\n");
         }
         new AlertDialog.Builder(this).setMessage(sb.toString()).show();
     }
