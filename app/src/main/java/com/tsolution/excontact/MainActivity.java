@@ -2,16 +2,21 @@ package com.tsolution.excontact;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.util.LogPrinter;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.LogManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,10 +30,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, 1);
-
     }
 
-    public void first(View view) {
+    public void getContactsList() {
+        contacts.clear();
+        groupTitles.clear();
+        groups.clear();
         Cursor groupCursor = getContentResolver().query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 new String[]{
@@ -43,12 +50,14 @@ public class MainActivity extends AppCompatActivity {
             try {
                 contacts.add(new contacts(groupCursor.getString(0), groupCursor.getString(1), groupCursor.getString(2)));
             } catch (Exception e) {
+                return;
             }
         }
         groupCursor.close();
+        getGroupId();
     }
 
-    public void two(View view) {
+    public void getGroupId() {
         Cursor groupCursor = getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
                 new String[]{
@@ -60,20 +69,28 @@ public class MainActivity extends AppCompatActivity {
         );
         while (groupCursor.moveToNext()) {
             try {
-                setting(groupCursor.getString(0), groupCursor.getString(1));
+                settingId(groupCursor.getString(0), groupCursor.getString(1));
             } catch (Exception e) {
+                return;
             }
         }
         groupCursor.close();
+        setGroupId();
+        getGroupTitle();
     }
 
-    public void three(View view) {
+    public void settingId(String name, String num) {
+        if (groups.containsKey(name)) return;
+        groups.put(name, num);
+    }
+
+    public void setGroupId() {
         for (contacts tmp : contacts) {
             tmp.groupId = Integer.parseInt(groups.get(tmp.name));
         }
     }
 
-    public void four(View view) {
+    public void getGroupTitle() {
         Cursor groupCursor = getContentResolver().query(
                 ContactsContract.Groups.CONTENT_URI,
                 new String[]{ContactsContract.Groups._ID,
@@ -88,8 +105,8 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
             }
         }
-        matching();
         groupCursor.close();
+        matching();
     }
 
     public void matching() {
@@ -100,16 +117,25 @@ public class MainActivity extends AppCompatActivity {
                 tmp.groupTitle = "기본그룹";
             }
         }
+        Log();
     }
 
-    public void ok(View view) {
+    public void Log() {
         for (contacts tmp : contacts) {
-            Log.e("test", "name: " + tmp.name + ", phone: " + tmp.phone + ", groupID: " + tmp.groupId + ", groupTitle: " + tmp.groupTitle + ", star: " + tmp.starred);
+            Log.v("contacts", String.format("Name: %s, Phone: %s, GroupID: %s, GroupTitle: %s, star: %s", tmp.name, tmp.phone, tmp.groupId, tmp.groupTitle, tmp.starred));
         }
     }
 
-    public void setting(String name, String num) {
-        if (groups.containsKey(name)) return;
-        groups.put(name, num);
+    public void getContacts(View view) {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, 1);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_DENIED)
+            return;
+        getContactsList();
+        StringBuffer sb = new StringBuffer();
+        for (contacts tmp : contacts) {
+            sb.append("Name: " + tmp.name + ", Phone: " + tmp.phone + ", GroupID: " + tmp.groupId + ", GroupTitle: " + tmp.groupTitle + ", star: " + tmp.starred + "\n\n");
+        }
+        new AlertDialog.Builder(this).setMessage(sb.toString()).show();
     }
+
 }
